@@ -303,7 +303,6 @@ def sparse_hypnogram_from_ids_format(ids_tuple: tuple,
     """
     inits, durations, annotations = ids_tuple
     if ann_to_class is None:
-        # TODO : If this is given True, we get error
         ann_to_class = create_variable_ann_to_class_int_dict(annotations)
 
     # Translate annotations to class integers and init SparseHypnogram
