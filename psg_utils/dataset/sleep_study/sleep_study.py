@@ -373,6 +373,7 @@ class SleepStudy(SubjectDirSleepStudyBase):
                     raise err from e
 
     def _load(self, allow_missing_channels=False):
+        print("_load is called with annotations", self.annotation_dict)
         """
         Loads data from the PSG and HYP files
         -- If self.select_channels is set (aka non empty list), only the column
@@ -394,7 +395,8 @@ class SleepStudy(SubjectDirSleepStudyBase):
                 period_length=self.get_period_length_in(self.data_time_unit),
                 time_unit=self.data_time_unit,
                 annotation_dict=self.annotation_dict,
-                sample_rate=header["sample_rate"]
+                sample_rate=header["sample_rate"],
+                sample_length=header["length"]
             )
         else:
             self._hypnogram = False
@@ -464,8 +466,11 @@ class SleepStudy(SubjectDirSleepStudyBase):
         """
         High-level function invoked to load the SleepStudy data
         """
+        print("function load is run")
+        print("Loading SleepStudy '{}'".format(self.identifier))
         if reload or not self.loaded:
             try:
+                print("Here we run _load, but where dose the annotation come from?")
                 self._load(allow_missing_channels)
             except Exception as e:
                 raise errors.CouldNotLoadError("Unexpected load error for sleep "

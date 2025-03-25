@@ -39,6 +39,12 @@ class DenseHypnogram(pd.DataFrame):
         TODO
         """
         # Convert times to internal units
+        print("\nTime stuff")
+        print(f"dense_init_times: {dense_init_times}")
+        print(f"dense_stages: {dense_stages}")
+        print(f"time_unit: {time_unit}")
+        print(f"internal_time_unit: {internal_time_unit}")
+
         dense_init_times = list(map(lambda t: convert_time(t, time_unit, internal_time_unit), dense_init_times))
         diffs = np.diff(dense_init_times)
         if np.any(diffs != diffs[0]):
@@ -54,6 +60,35 @@ class DenseHypnogram(pd.DataFrame):
             "sleep_stage": dense_stages
         })
 
+def fill_in_blanks_super_function(init_times : tuple, durations : tuple, sleep_stages : list, sample_length : int):
+    print("##### fill_in_blanks_super_function #####")
+    print(f"sample_length: {sample_length}")
+    endtime = sample_length / 128
+    init_times = list(init_times)
+    durations = list(durations)
+    sleep_stages = sleep_stages
+
+    # Fill the fist blank
+    init_times.insert(0, 0)
+    durations.insert(0, init_times[1])
+    sleep_stages = [item for x in sleep_stages for item in [x, 0]]
+    sleep_stages.insert(0, 0)
+
+    for i in range(2, len(sleep_stages)):
+        if i == len(sleep_stages) - 1:
+            init_times.insert(i, init_times[i-1] + durations[i-1])
+            durations.insert(i, endtime - init_times[i])
+            break
+        if i % 2 != 0:
+            continue
+        init_times.insert(i, init_times[i-1] + durations[i-1])
+        durations.insert(i, init_times[i+1] - init_times[i])
+        
+
+    print(len(init_times))
+    print(len(durations))
+    print(len(sleep_stages))
+    return init_times, durations, sleep_stages
 
 class SparseHypnogram(object):
     """
@@ -71,10 +106,16 @@ class SparseHypnogram(object):
                  sleep_stages: Union[List[int], np.ndarray],
                  period_length: [int, float],
                  time_unit: Union[TimeUnit, str] = TimeUnit.SECOND,
-                 internal_time_unit: [TimeUnit, str] = TimeUnit.MILLISECOND):
-
+                 internal_time_unit: [TimeUnit, str] = TimeUnit.MILLISECOND,
+                 sample_length: int = None):
+        print("SparseHypnogram was called")
         if not (len(init_times) == len(durations) == len(sleep_stages)):
             raise ValueError("Lists 'inits' and 'sleep_stages' must be of equal length.")
+
+
+        init_times, durations, sleep_stages = fill_in_blanks_super_function(init_times, durations, sleep_stages, sample_length)
+        print(f"_SparseHypnogram_ - init_times: {init_times}, durations: {durations}, sleep_stages: {sleep_stages}")
+
 
         # Convert times to internal (integer) representation
         self.time_unit = standardize_time_input(internal_time_unit)

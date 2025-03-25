@@ -283,7 +283,8 @@ def sparse_hypnogram_from_ids_format(ids_tuple: tuple,
                                      ann_to_class: dict,
                                      period_length: [int, float],
                                      time_unit: TimeUnit = TimeUnit.SECOND,
-                                     hyp_internal_time_unit: TimeUnit = TimeUnit.MILLISECOND):
+                                     hyp_internal_time_unit: TimeUnit = TimeUnit.MILLISECOND,
+                                     sample_length: int = None):
     """
     Initializes a SparseHypnogram from Start-Duration-Stage formatted data.
 
@@ -303,6 +304,7 @@ def sparse_hypnogram_from_ids_format(ids_tuple: tuple,
     """
     inits, durations, annotations = ids_tuple
     if ann_to_class is None:
+        # TODO : If this is given True, we get error
         ann_to_class = create_variable_ann_to_class_int_dict(annotations)
 
     # Translate annotations to class integers and init SparseHypnogram
@@ -314,7 +316,8 @@ def sparse_hypnogram_from_ids_format(ids_tuple: tuple,
                                  sleep_stages=ann_class_ints,
                                  period_length=period_length,
                                  time_unit=time_unit,
-                                 internal_time_unit=hyp_internal_time_unit)
+                                 internal_time_unit=hyp_internal_time_unit,
+                                 sample_length=sample_length)
     return sparse_hyp, ann_to_class
 
 

@@ -49,6 +49,8 @@ def load_psg(psg_file_path,
     # Load the header of a PSG file. Stores e.g. channel names and sample rates
     header = extract_header(psg_file_path=psg_file_path, header_file_path=header_file_path)
 
+    print("What is included in the header?: ", header['length'])
+
     if load_time_channel_selector:
         # Randomly select from the available channels in groups according to
         # passed RandomChannelSelector object
@@ -99,6 +101,7 @@ def load_hypnogram(file_path: str,
                    period_length: Union[int, float],
                    annotation_dict: dict,
                    sample_rate: int,
+                   sample_length: int,
                    time_unit: TimeUnit = TimeUnit.SECOND):
     """
     Returns a psg_utils.hypnogram SparseHypnogram object representation of the
@@ -120,11 +123,15 @@ def load_hypnogram(file_path: str,
         annotation_dict unless None was passed for annotation_dict, in which
         case the returned annotation_dict will be the automatically inferred
     """
+    print("\n")
+    print("Loading hypnogram from file: ", file_path)
+    print("Wit annotation_dict: ", annotation_dict)
     hyp, annotation_dict = extract_hyp_data(file_path=file_path,
                                             period_length=period_length,
                                             time_unit=time_unit,
                                             annotation_dict=annotation_dict,
-                                            sample_rate=sample_rate)
+                                            sample_rate=sample_rate,
+                                            sample_length=sample_length)
     return hyp, annotation_dict
 
 

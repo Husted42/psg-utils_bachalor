@@ -379,6 +379,7 @@ def extract_hyp_data(file_path,
                      period_length,
                      annotation_dict,
                      sample_rate,
+                     sample_length,
                      replace_zero_durations=False,
                      time_unit: TimeUnit = TimeUnit.SECOND,
                      hyp_internal_time_unit: TimeUnit = TimeUnit.MILLISECOND):
@@ -410,5 +411,6 @@ def extract_hyp_data(file_path,
         period_length=period_length,
         ann_to_class=annotation_dict,
         time_unit=time_unit,
-        hyp_internal_time_unit=hyp_internal_time_unit
+        hyp_internal_time_unit=hyp_internal_time_unit,
+        sample_length=sample_length
     )
