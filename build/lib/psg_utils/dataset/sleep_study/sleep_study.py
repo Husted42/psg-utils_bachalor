@@ -121,6 +121,7 @@ class SleepStudy(SubjectDirSleepStudyBase):
         self.times_loaded = 0
 
         if load:
+            print("Object self in sleep_study.py is loaded")
             self.load()
 
     def __str__(self):
@@ -373,7 +374,6 @@ class SleepStudy(SubjectDirSleepStudyBase):
                     raise err from e
 
     def _load(self, allow_missing_channels=False):
-        print("_load is called with annotations", self.annotation_dict)
         """
         Loads data from the PSG and HYP files
         -- If self.select_channels is set (aka non empty list), only the column
@@ -385,6 +385,7 @@ class SleepStudy(SubjectDirSleepStudyBase):
         -- If self.hyp_strip_func is set, this function will be applied to the
            hypnogram object.
         """
+        print("_load is run")
         self._psg, header = self._load_with_any_in(self._try_channels, allow_missing_channels)
         self._set_loaded_channels(header['channel_names'])
         self._set_header_fields(header)
@@ -467,10 +468,10 @@ class SleepStudy(SubjectDirSleepStudyBase):
         High-level function invoked to load the SleepStudy data
         """
         print("function load is run")
-        print("Loading SleepStudy '{}'".format(self.identifier))
+        # print("Loading SleepStudy '{}'".format(self.identifier))
         if reload or not self.loaded:
             try:
-                print("Here we run _load, but where dose the annotation come from?")
+                # print("Here we run _load, but where dose the annotation come from?")
                 self._load(allow_missing_channels)
             except Exception as e:
                 raise errors.CouldNotLoadError("Unexpected load error for sleep "

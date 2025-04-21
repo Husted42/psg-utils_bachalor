@@ -46,6 +46,7 @@ def extract_from_start_dur_stage(file_path, **kwargs):
     Returns:
         A StartDurationStageFormat object
     """
+    print("file_path: ", file_path)
     df = pd.read_csv(file_path, header=None)
     print("extract_from_start_dur_stage - df: ", df)
     return StartDurationStageFormat(zip(*df.to_numpy()))
@@ -67,6 +68,16 @@ def extract_from_xml(file_path, **kwargs):
         "Arousal|Arousal ()": "True", # Standard
         "Arousal|Arousal (Asda)": "True", # Standard
         "Spontaneous arousal|Arousal (ARO SPONT)": "True", # TODO : Spontaneous
+        # CFS specific
+        "Arousal resulting from respiratory effort|Arousal (ARO RES)": "True", # TODO : Respiratory
+        "Spontaneous arousal|Arousal (SPON ARO)": "True", # TODO : Spontaneous
+        "Arousal resulting from respiratory effort|Arousal (RESP ARO)": "True", # TODO : Respiratory
+        "Arousal resulting from periodic leg movement|Arousal (PLM)": "True", # TODO : Periodic leg movement
+        "Arousal|Arousal (Arousal)": "True", # Standard
+        "ASDA arousal|Arousal (ADSA)": "True", # Standard
+        "Spontaneous arousal|Arousal (spon aro)": "True", # TODO : Spontaneous
+        "Arousal resulting from periodic leg movement|Arousal (PLM ARO)": "True", # TODO : Periodic leg movement
+        "Spontaneous arousal|Arousal (apon aro)": "True", # TODO : Spontaneous
     }
     starts, durs, stages = [], [], []
     for event in events[0]:
@@ -361,18 +372,19 @@ def extract_ids_from_hyp_file(file_path,
     print(f"extract_ids_from_hyp_file - Extracting from file: {file_path}")
     if extract_func is None:
         extract_func = os.path.split(file_path)[-1].split('.', 1)[-1].lower()
-        print(f"extract_ids_from_hyp_file - No extract_func specified, using file extension '{extract_func}'")
+        # print(f"extract_ids_from_hyp_file - No extract_func specified, using file extension '{extract_func}'")
     if not callable(extract_func):
-        print("Which extraction function to use: ", extract_func)
+        # print("Which extraction function to use: ", extract_func)
         extract_func = _EXTRACT_FUNCS[extract_func]
-        print(f"extract_ids_from_hyp_file - Using callable from _EXTRACT_FUNCS: {extract_func}")
+        # print(f"extract_ids_from_hyp_file - Using callable from _EXTRACT_FUNCS: {extract_func}")
     inits, durs, stages = extract_func(file_path=file_path,
                                        period_length=period_length,
                                        time_unit=time_unit,
                                        sample_rate=sample_rate)
     if replace_zero_durations:
         durs = np.where(np.isclose(durs, 0), replace_zero_durations, durs)
-    return squeeze_events(inits, durs, stages)
+    # We do not need to squese events here, as the extracted data is already in StartDurationStageFormat
+    return inits, durs, stages
 
 
 def extract_hyp_data(file_path,
@@ -399,6 +411,8 @@ def extract_hyp_data(file_path,
     Returns:
         A SparseHypnogram object, annotation dict
     """
+    print(f"extract_hyp_data - Extracting from file: {file_path}")
+    # file_path = '/mnt/d/datasets/processed/mros/views/fixed_split/train/mros-visit1-aa0288/mros-visit1-aa0288-nsrr.ids'
     ids_tuple = extract_ids_from_hyp_file(
         file_path,
         period_length=period_length,

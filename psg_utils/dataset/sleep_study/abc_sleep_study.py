@@ -468,6 +468,7 @@ class AbstractBaseSleepStudy(ABC):
     @contextmanager
     def loaded_in_context(self, allow_missing_channels=False):
         """ Context manager from automatic loading and unloading """
+        print("Loaded in context") 
         self.load(allow_missing_channels=allow_missing_channels)
         try:
             yield self

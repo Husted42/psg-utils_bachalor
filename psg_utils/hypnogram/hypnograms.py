@@ -23,7 +23,7 @@ class DenseHypnogram(pd.DataFrame):
     0   0                  0
     1   30                 0
     2   60                 1
-        ...
+    ...
 
     Where one sleep stage stored for each period of 'period_length' TimeUnits
     The period_length=30 in example above.
@@ -39,11 +39,11 @@ class DenseHypnogram(pd.DataFrame):
         TODO
         """
         # Convert times to internal units
-        print("\nTime stuff")
-        print(f"dense_init_times: {dense_init_times}")
-        print(f"dense_stages: {dense_stages}")
-        print(f"time_unit: {time_unit}")
-        print(f"internal_time_unit: {internal_time_unit}")
+        # print("\nTime stuff")
+        # print(f"dense_init_times: {dense_init_times}")
+        # print(f"dense_stages: {dense_stages}")
+        # print(f"time_unit: {time_unit}")
+        # print(f"internal_time_unit: {internal_time_unit}")
 
         dense_init_times = list(map(lambda t: convert_time(t, time_unit, internal_time_unit), dense_init_times))
         diffs = np.diff(dense_init_times)
@@ -60,35 +60,127 @@ class DenseHypnogram(pd.DataFrame):
             "sleep_stage": dense_stages
         })
 
-def fill_in_blanks_super_function(init_times : tuple, durations : tuple, sleep_stages : list, sample_length : int):
-    print("##### fill_in_blanks_super_function #####")
-    print(f"sample_length: {sample_length}")
+'''
+    We have to do recursion to keep the indexes in sync.
+
+    I added the ability to skip very long duratins
+'''
+def skip_zeros(lst_duration : list, lst_init_times : list, sleep_stages : list):
+    for i in range(len(lst_duration)):
+        if lst_duration[i] == 0 or lst_duration[i] > 1000:
+            lst_duration.pop(i)
+            lst_init_times.pop(i)
+            sleep_stages.pop(1) # We do not care which elemet since all elements are the same
+            return skip_zeros(lst_duration, lst_init_times, sleep_stages)
+    return lst_duration, lst_init_times, sleep_stages
+
+'''
+    Sometimes we get an error with overlapping hypnograms.
+    For example aa0762 we have:
+    <ScoredEvent>
+        <EventType>Arousals|Arousals</EventType>
+        <EventConcept>Arousal|Arousal ()</EventConcept>
+        <Start>10323</Start>
+        <Duration>12.3</Duration>
+        <SignalLocation>C4</SignalLocation>
+    </ScoredEvent>
+    <ScoredEvent>
+        <EventType>Arousals|Arousals</EventType>
+        <EventConcept>ASDA arousal|Arousal (ASDA)</EventConcept>
+        <Start>10324.2</Start>
+        <Duration>10.4</Duration>
+        <SignalLocation>C3</SignalLocation>
+    </ScoredEvent>
+'''
+def clean_hypnogram(init_times, durations, stages):
+    cleaned_init_times = [init_times[0]]
+    cleaned_durations = [durations[0]]
+    cleaned_stages = [stages[0]]
+
+    for i in range(1, len(init_times)):
+        prev_start = cleaned_init_times[-1]
+        prev_dur = cleaned_durations[-1]
+        prev_end = prev_start + prev_dur
+        curr_start = init_times[i]
+        curr_dur = durations[i]
+        curr_stage = stages[i]
+
+        if curr_start < prev_end:
+            # Overlap: merge only if same stage
+            if curr_stage == cleaned_stages[-1]:
+                # Extend previous duration to include the overlap
+                new_end = max(prev_end, curr_start + curr_dur)
+                cleaned_durations[-1] = new_end - prev_start
+                continue
+            else:
+                # Conflict: keep the longer one
+                if prev_dur >= curr_dur:
+                    continue  # skip current
+                else:
+                    cleaned_init_times[-1] = curr_start
+                    cleaned_durations[-1] = curr_dur
+                    cleaned_stages[-1] = curr_stage
+        else:
+            cleaned_init_times.append(curr_start)
+            cleaned_durations.append(curr_dur)
+            cleaned_stages.append(curr_stage)
+
+    return cleaned_init_times, cleaned_durations, cleaned_stages
+
+'''
+    We get 3 lists:
+    - init_times: list of times when the sleep stage starts
+    - durations: list of durations of the sleep stages
+    - sleep_stages: list of sleep stages (0 = awake, 1 = NREM, 2 = REM)
+
+    We need to fill in the blanks in the sleep stages. For example, if we have:
+        init_times = [20, 40]
+        durations = [10, 10]
+        sleep_stages = [1, 1]
+        sample_length = 200
+
+    We should get
+        init_times = [0, 20, 30, 40, 50]
+        durations = [20, 10, 10, 10, 150]
+        seep_stages = [0, 1, 0, 1, 0]
+
+'''
+def fill_in_blanks_super_function(init_times, durations, sleep_stages, sample_length):
+    if type(init_times) != list or type(durations) != list or type(sleep_stages) != list:
+        print("init_times", type(init_times), "durations", type(durations), "sleep_stages", type(sleep_stages))
+        raise ValueError("init_times, durations and sleep_stages must be lists")
+    
     endtime = sample_length / 128
-    init_times = list(init_times)
-    durations = list(durations)
-    sleep_stages = sleep_stages
+    durations, init_times, sleep_stages = skip_zeros(durations, init_times, sleep_stages)
+    init_times, durations, sleep_stages = clean_hypnogram(init_times, durations, sleep_stages)
 
-    # Fill the fist blank
-    init_times.insert(0, 0)
-    durations.insert(0, init_times[1])
-    sleep_stages = [item for x in sleep_stages for item in [x, 0]]
-    sleep_stages.insert(0, 0)
+    # Combine into sorted segments
+    segments = sorted(zip(init_times, durations, sleep_stages), key=lambda x: x[0])
 
-    for i in range(2, len(sleep_stages)):
-        if i == len(sleep_stages) - 1:
-            init_times.insert(i, init_times[i-1] + durations[i-1])
-            durations.insert(i, endtime - init_times[i])
-            break
-        if i % 2 != 0:
-            continue
-        init_times.insert(i, init_times[i-1] + durations[i-1])
-        durations.insert(i, init_times[i+1] - init_times[i])
-        
+    new_init_times = []
+    new_durations = []
+    new_sleep_stages = []
 
-    print(len(init_times))
-    print(len(durations))
-    print(len(sleep_stages))
-    return init_times, durations, sleep_stages
+    current_time = 0
+
+    for start, dur, stage in segments:
+        if start > current_time:
+            # Fill blank between current_time and next start
+            new_init_times.append(current_time)
+            new_durations.append(start - current_time)
+            new_sleep_stages.append(0)  # assume blank is stage 0
+
+        new_init_times.append(start)
+        new_durations.append(dur)
+        new_sleep_stages.append(stage)
+        current_time = start + dur
+
+    if current_time < endtime:
+        new_init_times.append(current_time)
+        new_durations.append(endtime - current_time)
+        new_sleep_stages.append(0)
+
+    return new_init_times, new_durations, new_sleep_stages
 
 class SparseHypnogram(object):
     """
@@ -108,14 +200,17 @@ class SparseHypnogram(object):
                  time_unit: Union[TimeUnit, str] = TimeUnit.SECOND,
                  internal_time_unit: [TimeUnit, str] = TimeUnit.MILLISECOND,
                  sample_length: int = None):
-        print("SparseHypnogram was called")
+        # print("SparseHypnogram was called")
         if not (len(init_times) == len(durations) == len(sleep_stages)):
             raise ValueError("Lists 'inits' and 'sleep_stages' must be of equal length.")
+        if len(init_times) == 0:
+            raise ValueError("SparseHypnogram must contain at least one period.")
 
+        print(f"init_times: {init_times}, \ndurations: {durations}, \nsleep_stages: {sleep_stages}")
 
+        init_times, durations, sleep_stages = list(init_times), list(durations), list(sleep_stages)
         init_times, durations, sleep_stages = fill_in_blanks_super_function(init_times, durations, sleep_stages, sample_length)
-        print(f"_SparseHypnogram_ - init_times: {init_times}, durations: {durations}, sleep_stages: {sleep_stages}")
-
+        # print(f"_SparseHypnogram_ - init_times: {init_times}, durations: {durations}, sleep_stages: {sleep_stages}")
 
         # Convert times to internal (integer) representation
         self.time_unit = standardize_time_input(internal_time_unit)
@@ -138,6 +233,8 @@ class SparseHypnogram(object):
                              "internal_time_unit=TimeUnit.MILLISECOND to represent the 2.5 seconds as integer value "
                              "2500 internally.") from e
 
+        # print(f"init_times: {init_times}")
+
         if init_times[0] != 0:
             # Insert leading UNKNOWN class if hypnogram does not start at
             # second 0
@@ -149,6 +246,8 @@ class SparseHypnogram(object):
         self.inits = np.array(init_times, dtype=np.int64)
         self.durations = np.array(durations, dtype=np.int64)
         self.stages = np.array(sleep_stages, dtype=np.uint8)
+
+        # print(f"init_times: {init_times}")
 
         # Check sorted init times
         if np.any(np.diff(self.inits) < 0):
@@ -459,8 +558,10 @@ class SparseHypnogram(object):
             A DenseHypnogram object
         """
         # Get all period start points
+        # print("To_dense was called")
         period_start_points = np.arange(0, self.last_period_start+self.period_length, self.period_length)
         stages = [self.get_period_at_time(time, self.time_unit, on_overlapping) for time in period_start_points]
+        # print("\nto_dense : stages : ", stages)
         return DenseHypnogram(dense_init_times=period_start_points,
                               dense_stages=stages,
                               time_unit=self.time_unit,
