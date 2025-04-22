@@ -206,7 +206,10 @@ class SparseHypnogram(object):
         if len(init_times) == 0:
             raise ValueError("SparseHypnogram must contain at least one period.")
 
-        print(f"init_times: {init_times}, \ndurations: {durations}, \nsleep_stages: {sleep_stages}")
+        print(f"init_times: {init_times}")
+        print(f"durations: {durations}")
+        print(f"sleep_stages: {sleep_stages}")
+        print(f"sample_length: {sample_length}")
 
         init_times, durations, sleep_stages = list(init_times), list(durations), list(sleep_stages)
         init_times, durations, sleep_stages = fill_in_blanks_super_function(init_times, durations, sleep_stages, sample_length)
