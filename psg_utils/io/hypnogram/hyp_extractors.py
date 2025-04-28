@@ -67,6 +67,16 @@ def extract_from_xml(file_path, **kwargs):
         "Arousal|Arousal ()": "True", # Standard
         "Arousal|Arousal (Asda)": "True", # Standard
         "Spontaneous arousal|Arousal (ARO SPONT)": "True", # TODO : Spontaneous
+        # CFS specific
+        "Arousal resulting from respiratory effort|Arousal (ARO RES)": "True", # TODO : Respiratory
+        "Spontaneous arousal|Arousal (SPON ARO)": "True", # TODO : Spontaneous
+        "Arousal resulting from respiratory effort|Arousal (RESP ARO)": "True", # TODO : Respiratory
+        "Arousal resulting from periodic leg movement|Arousal (PLM)": "True", # TODO : Periodic leg movement
+        "Arousal|Arousal (Arousal)": "True", # Standard
+        "ASDA arousal|Arousal (ADSA)": "True", # Standard
+        "Spontaneous arousal|Arousal (spon aro)": "True", # TODO : Spontaneous
+        "Arousal resulting from periodic leg movement|Arousal (PLM ARO)": "True", # TODO : Periodic leg movement
+        "Spontaneous arousal|Arousal (apon aro)": "True", # TODO : Spontaneous
     }
     starts, durs, stages = [], [], []
     for event in events[0]:
@@ -372,7 +382,8 @@ def extract_ids_from_hyp_file(file_path,
                                        sample_rate=sample_rate)
     if replace_zero_durations:
         durs = np.where(np.isclose(durs, 0), replace_zero_durations, durs)
-    return squeeze_events(inits, durs, stages)
+    # We do not need to squese events here, as the extracted data is already in StartDurationStageFormat
+    return inits, durs, stages
 
 
 def extract_hyp_data(file_path,

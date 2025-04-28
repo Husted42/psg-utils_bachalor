@@ -308,7 +308,7 @@ def sparse_hypnogram_from_ids_format(ids_tuple: tuple,
         ann_to_class = create_variable_ann_to_class_int_dict(annotations)
 
     # Translate annotations to class integers and init SparseHypnogram
-    print(f"ann_class_ints: {annotations}")
+    # print(f"ann_class_ints: {annotations}")
     ann_class_ints = [ann_to_class[a] for a in annotations]
 
     sparse_hyp = SparseHypnogram(init_times=inits,
@@ -332,6 +332,9 @@ def squeeze_events(inits, durations, annotations):
         annotations:   A list of string stage/event annotations
     """
     squeezed = []
+    print(f"len(inits): {len(inits)}")
+    print(f"len(durations): {len(durations)}")
+    print(f"len(annotations): {len(annotations)}")
     running = [inits[0], durations[0], annotations[0]]
     for start, dur, stage in zip(inits[1:], durations[1:], annotations[1:]):
         if start == running[0] + running[1] and stage == running[2]:

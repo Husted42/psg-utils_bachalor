@@ -41,6 +41,7 @@ class H5SleepStudy(AbstractBaseSleepStudy):
             self.annotation_dict = np.vectorize(annotation_dict.get)
         self._access_time_random_channel_selector = None
         self._n_classes = None  # Set in self.load
+        print("Load is called from H5SleepStudy")
         self.load()  # Sets data visibility
 
     @property

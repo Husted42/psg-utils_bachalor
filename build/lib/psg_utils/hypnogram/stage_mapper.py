@@ -113,14 +113,12 @@ def stage_string_to_class(stage_string):
 
 
 def create_variable_ann_to_class_int_dict(annotations):
-    print("[OBS]: Creating mapping from variable sleep stage strings to class integers")
     import numpy as np
     unique_ann = np.unique(annotations)
     mapping = {}
     for s in unique_ann:
         try:
             mapping[s] = int(s)
-            print("[OBS]: Mapping variable stage string '{:s}' to stage '{}' ", s, mapping[s])
         except (TypeError, ValueError):
             mapping[s] = stage_string_to_class(standardize_stage_string(s))
     return mapping
