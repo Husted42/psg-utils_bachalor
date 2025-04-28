@@ -63,7 +63,7 @@ class DenseHypnogram(pd.DataFrame):
 def fill_in_blanks_super_function(init_times : tuple, durations : tuple, sleep_stages : list, sample_length : int):
     print("##### fill_in_blanks_super_function #####")
     print(f"sample_length: {sample_length}")
-    endtime = sample_length / 128
+    endtime = int(sample_length / 128)
     init_times = list(init_times)
     durations = list(durations)
     sleep_stages = sleep_stages
@@ -73,7 +73,7 @@ def fill_in_blanks_super_function(init_times : tuple, durations : tuple, sleep_s
     durations.insert(0, init_times[1])
     sleep_stages = [item for x in sleep_stages for item in [x, 0]]
     sleep_stages.insert(0, 0)
-
+z
     for i in range(2, len(sleep_stages)):
         if i == len(sleep_stages) - 1:
             init_times.insert(i, init_times[i-1] + durations[i-1])
