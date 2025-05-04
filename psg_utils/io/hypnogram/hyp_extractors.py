@@ -63,20 +63,20 @@ def extract_from_xml(file_path, **kwargs):
     assert len(events) == 1
     stage_dict = {
         "ASDA arousal|Arousal (ASDA)": "True", # Standard
-        "Arousal|Arousal (ARO Limb)" : "True", # TODO : Should we include these? Period leg-movement
+        "Arousal|Arousal (ARO Limb)" : "False", # TODO : Should we include these? Period leg-movement
         "Arousal|Arousal ()": "True", # Standard
         "Arousal|Arousal (Asda)": "True", # Standard
-        "Spontaneous arousal|Arousal (ARO SPONT)": "True", # TODO : Spontaneous
+        "Spontaneous arousal|Arousal (ARO SPONT)": "False", # TODO : Spontaneous
         # CFS specific
-        "Arousal resulting from respiratory effort|Arousal (ARO RES)": "True", # TODO : Respiratory
-        "Spontaneous arousal|Arousal (SPON ARO)": "True", # TODO : Spontaneous
-        "Arousal resulting from respiratory effort|Arousal (RESP ARO)": "True", # TODO : Respiratory
-        "Arousal resulting from periodic leg movement|Arousal (PLM)": "True", # TODO : Periodic leg movement
+        "Arousal resulting from respiratory effort|Arousal (ARO RES)": "False", # TODO : Respiratory
+        "Spontaneous arousal|Arousal (SPON ARO)": "False", # TODO : Spontaneous
+        "Arousal resulting from respiratory effort|Arousal (RESP ARO)": "False", # TODO : Respiratory
+        "Arousal resulting from periodic leg movement|Arousal (PLM)": "False", # TODO : Periodic leg movement
         "Arousal|Arousal (Arousal)": "True", # Standard
         "ASDA arousal|Arousal (ADSA)": "True", # Standard
-        "Spontaneous arousal|Arousal (spon aro)": "True", # TODO : Spontaneous
-        "Arousal resulting from periodic leg movement|Arousal (PLM ARO)": "True", # TODO : Periodic leg movement
-        "Spontaneous arousal|Arousal (apon aro)": "True", # TODO : Spontaneous
+        "Spontaneous arousal|Arousal (spon aro)": "False", # TODO : Spontaneous
+        "Arousal resulting from periodic leg movement|Arousal (PLM ARO)": "False", # TODO : Periodic leg movement
+        "Spontaneous arousal|Arousal (apon aro)": "False", # TODO : Spontaneous
     }
     starts, durs, stages = [], [], []
     for event in events[0]:
